@@ -9,9 +9,9 @@ def getMatrix(y_predict, y_true):
         elif i == 1 and j == 0:
             FP += 1
         elif i == 0 and j == 0:
-            FN += 1
-        elif i == 0 and j == 1:
             TN += 1
+        elif i == 0 and j == 1:
+            FN += 1
     return TP, FP, FN, TN 
 def ROC(y_prob, y_true, step = 0.1):
     threold = range(0, 1, step)
@@ -29,7 +29,7 @@ def AUC(y_prob, y_true, step = 0.1):
 
 def Accurate(yhat, y):
     TP, FP, FN, TN = getMatrix(yhat > 0.5, y)
-    return (TP + TN) / (TP + FN + FP + FN)
+    return (TP + TN) / (TP + FN + FP + TN)
 
 def logsist(Y):
     return 1 / (1 + torch.exp(Y))

@@ -1,22 +1,26 @@
-'''
-Author: zengyong 2595650269@qq.com
-Date: 2022-12-07 10:22:11
-LastEditors: zengyong 2595650269@qq.com
-LastEditTime: 2022-12-07 11:18:40
-FilePath: \gender-classification\dataloader.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-'''
-from matplotlib import pylab as plt
+
 import os
-#import pandas as pd
-def load_img(img_path, img_names):
-    X = []
-    for img_name in img_names:
-        X.append(plt.imread(img_path + img_name) / 255)
-    return X 
-def load_test_img(img_path):
-    files = os.listdir(img_path)
-    test = []
-    for file in files:
-        test.append(plt.imread(img_path + file) / 255)
-    return test        
+import pandas as pd
+from torchvision.io import read_image
+from torch.utils.data import Dataset 
+class ImageDataset(Dataset):
+    def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
+        self.img_labels = pd.read_csv(annotations_file)
+        self.img_dir = img_dir
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __len__(self):
+        return len(self.img_labels)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_labels['image_id'][idx])
+        image = read_image(img_path) / 255
+        label = self.img_labels['is_male'][idx]
+        if label == -1:
+            label = 0
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            label = self.target_transform(label)
+        return image, label      
