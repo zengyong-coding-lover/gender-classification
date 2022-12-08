@@ -1,11 +1,4 @@
-'''
-Author: zengyong 2595650269@qq.com
-Date: 2022-12-07 09:40:42
-LastEditors: zengyong 2595650269@qq.com
-LastEditTime: 2022-12-08 00:35:11
-FilePath: \gender-classification\main.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-'''
+
 
 from utils import *
 from dataloader import *
@@ -14,6 +7,7 @@ from torch.utils import  data as Data
 import torch
 from torch import nn
 from matplotlib import pylab as plt
+import seaborn as sns
 
 if __name__ == '__main__':
     models = ["ResNet", "XNet"]
@@ -44,7 +38,7 @@ if __name__ == '__main__':
             for X, y in train_iter:
                 yhat = Model(X).reshape(y.shape)
                 yhat = logsist(yhat)
-                loss = CELoss(yhat, y)
+                loss = float(CELoss(yhat, y))
                 allloss += loss
                 sgd.zero_grad()
                 loss.backward()
@@ -64,15 +58,20 @@ if __name__ == '__main__':
                 acc = Accurate(test_yhat, test_y)
                 print('epoch %d: accurate %f (test)' % (epoch+1, acc))
             ALLACC.append(acc)
-        plt.plot([i for i in range(len(ALLACC))], acc)
-        plt.plot([i for i in range(len(ALLLOSS))], acc)
+        plt.title(model)
+        plt.plot([i for i in range(len(ALLACC))], ALLACC)
+        plt.plot([i for i in range(len(ALLLOSS))], ALLLOSS)
         plt.legend(['train_acc', 'train_loss'])
         plt.xlabel('epoch')
         plt.show()
-        TP, FP, FN, TN = getMatrix(test_yhat, test_y)
-        plt.heatmap([[TP, FN], [FP, TN]])
-        plt.title(model + 'Mixed Matrix')
-        plt.show()
+        TP, FP, FN, TN = getMatrix(test_yhat > 0.5, test_y)
+        C = [[TP, FN], [FP, TN]]
+        sns.set()
+        f, ax = plt.subplots()
+        sns.heatmap(C, annot=True, ax=ax)
+        ax.set_title(model + 'Mixed Matrix')
+        ax.set_xlabel('predict')
+        ax.set_ylabel('true')
         roc = ROC(test_yhat, test_y)
         plt.plot(roc[:, 0], roc[:, 1])
         plt.title(model + 'roc')
