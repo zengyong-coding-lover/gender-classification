@@ -14,7 +14,7 @@ def getMatrix(y_predict, y_true):
             FN += 1
     return TP, FP, FN, TN 
 def ROC(y_prob, y_true, step = 0.1):
-    threold = range(0, 1, step)
+    threold = np.arange(0.0, 1.0, step)
     TPR_FPR = []
     for i in threold:
         TP, FP, FN, TN = getMatrix(y_prob > i, y_true)
