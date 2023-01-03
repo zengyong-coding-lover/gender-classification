@@ -8,11 +8,8 @@ Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查�
 '''
 import torch
 from torch import nn
-import numpy as np
-def gaussian_noise(img, mean = 0, sigma = 0.1):
-    noise = np.random.normal(mean, sigma, img.shape)
-    gau = img + noise
-    return gau
+
+
 
 def conv_block(input_channels, num_channels):
     return nn.Sequential(
@@ -34,9 +31,9 @@ class DenseBlock(nn.Module):
             # 连接通道维度上每个块的输入和输出
             X = torch.cat((X, Y), dim=1)
         return X
-class XNet(nn.Module):
+class XNet_Noise(nn.Module):
     def __init__(self):
-        super(XNet, self).__init__()
+        super(XNet_Noise, self).__init__()
         b1 = nn.Sequential(
         nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
         nn.BatchNorm2d(64), nn.ReLU(),
@@ -67,4 +64,4 @@ class XNet(nn.Module):
             nn.Conv2d(input_channels, num_channels, kernel_size=1),
             nn.AvgPool2d(kernel_size=2, stride=2))
     def forward(self, X):
-        return self.net(gaussian_noise(X))
+        return self.net(X)

@@ -33,3 +33,15 @@ def Accurate(yhat, y):
 
 def logsist(Y):
     return 1 / (1 + torch.exp(Y))
+
+def gaussian_noise(img, mean = 0, sigma = 0.1):
+    noise = np.random.normal(mean, sigma, img.shape)
+    gau = img + noise
+    return gau
+
+
+# h, w = img.shape[:2]
+# center = (w // 2, h // 2)
+# # 旋转中心坐标，逆时针旋转：45°，缩放因子：1
+# M_1 = cv2.getRotationMatrix2D(center, 45, 1)
+# rotated_1 = cv2.warpAffine(img, M_1, (w, h)) 
