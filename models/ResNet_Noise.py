@@ -6,6 +6,7 @@ LastEditTime: 2022-12-08 00:20:06
 FilePath: \gender-classification\models\ResNet.py
 Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 '''
+import torch
 from torch import nn
 from torch.nn import functional as F
 import numpy as np
@@ -13,9 +14,9 @@ import numpy as np
 #     def __init__(self):
 #         super(self).__init__()
 
-def gaussian_noise(img, mean = 0, sigma = 0.1):
-    noise = np.random.normal(mean, sigma, img.shape)
-    gau = img + noise
+def gaussian_noise(img, mean = 0.0, sigma = 0.1):
+    noise = torch.normal(mean= mean, std= sigma, size = img.shape)
+    gau = img + noise.to('cuda')
     return gau
 
 class Residual(nn.Module):  #@save
@@ -67,3 +68,5 @@ class ResNet_Noise(nn.Module):
                     nn.Flatten(), nn.Linear(512, 1))
     def forward(self, X):
         return self.net(gaussian_noise(X))
+    def predict(self, X):
+        return self.net(X)

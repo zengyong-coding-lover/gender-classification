@@ -9,7 +9,10 @@ Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查�
 import torch
 from torch import nn
 
-
+def gaussian_noise(img, mean = 0.0, sigma = 0.1):
+    noise = torch.normal(mean= mean, std= sigma, size = img.shape)
+    gau = img + noise.to('cuda')
+    return gau
 
 def conv_block(input_channels, num_channels):
     return nn.Sequential(
@@ -64,4 +67,6 @@ class XNet_Noise(nn.Module):
             nn.Conv2d(input_channels, num_channels, kernel_size=1),
             nn.AvgPool2d(kernel_size=2, stride=2))
     def forward(self, X):
-        return self.net(X)
+        return self.net(gaussian_noise(X))
+    def predict(self, X):
+        return self.net( X)

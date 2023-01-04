@@ -67,4 +67,6 @@ class XNet(nn.Module):
             nn.Conv2d(input_channels, num_channels, kernel_size=1),
             nn.AvgPool2d(kernel_size=2, stride=2))
     def forward(self, X):
-        return self.net(gaussian_noise(X))
+        return self.net((X))
+    def predict(self, X):
+        return self.net((X))

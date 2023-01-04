@@ -12,6 +12,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+
 def gaussian_noise(img, mean = 0.0, sigma = 0.1):
     noise = torch.normal(mean= mean, std= sigma, size = img.shape)
     gau = img + noise.to('cuda')
@@ -41,9 +42,9 @@ class Inception(nn.Module):
         # 在通道维度上连结输出
         return torch.cat((p1, p2, p3, p4), dim=1)
 
-class GoogleNet(nn.Module):
+class GoogleNet_Noise(nn.Module):
     def __init__(self) -> None:
-        super(GoogleNet, self).__init__()
+        super(GoogleNet_Noise, self).__init__()
         b1 = nn.Sequential(nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
                    nn.ReLU(),
                    nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
@@ -67,6 +68,7 @@ class GoogleNet(nn.Module):
                    nn.Flatten())
         self.net = nn.Sequential(b1, b2, b3, b4, b5, nn.Linear(1024, 1))
     def forward(self, X):
-        return self.net(X)
+        return self.net(gaussian_noise( X))
     def predict(self, X):
-        return self.net(X)
+        return self.net( X)
+    

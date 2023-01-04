@@ -24,7 +24,7 @@ def ROC(y_prob, y_true, step = 0.1):
     return sorted_
 def AUC(y_prob, y_true, step = 0.1):
     roc = np.array(ROC(y_prob, y_true, step))
-    y = np.sum((roc[1:, 0] - roc[:-1, 0]) * roc[:-1, 1])
+    y = np.cumsum((roc[1:, 0] - roc[:-1, 0]) * roc[:-1, 1])
     return [roc[:-1, 0], y]
 
 def Accurate(yhat, y):

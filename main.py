@@ -16,16 +16,16 @@ import torch
 from torch import nn
 from matplotlib import pylab as plt
 import seaborn as sns
-models = [ "ResNet", "XNet"]
-num_epochs = 2 
+models = [  "ResNet", "XNet"]
+num_epochs = 2
 batchsize = 50
-device = 'cpu'
+device = 'cuda'
 lr = 0.1
 train_dir = './bitmoji-faces-gender-recognition/train.csv'
 train_image_dir = './bitmoji-faces-gender-recognition/BitmojiDataset/trainimages/'
 test_dir = './bitmoji-faces-gender-recognition/sample_submission.csv'
 test_image_dir = './bitmoji-faces-gender-recognition/BitmojiDataset/testimages'
-
+result_dir = './result/'
 if __name__ == '__main__':
     transform = lambda X: torch.tensor(X, device=device, dtype=torch.float32)
     dataset = ImageDataset(train_dir, 
@@ -38,6 +38,9 @@ if __name__ == '__main__':
     CELoss = nn.BCEWithLogitsLoss()
     for model in models:
         myfile = import_module('models.' + model)
+        model_result_dir = result_dir + model
+        if not os.path.exists(model_result_dir):
+            os.mkdir(model_result_dir)
         class_model = getattr(myfile, model)
         Model = class_model()
         Model = Model.to(device)
@@ -54,15 +57,15 @@ if __name__ == '__main__':
                 sgd.zero_grad()
                 loss.backward()
                 sgd.step()
-                #print('%f' % loss)
+               # print('%f' % loss)
             print('epoch %d loss is : %f' % (epoch + 1, allloss / len(train)))
-            ALLLOSS.append(allloss / len(train))
+            ALLLOSS.append(allloss / len(train) * 10)
             #if epoch % 2 == 0:
             with torch.no_grad():
                 valid_yhat = []
                 valid_y = []
                 for validx, validy in valid_iter:
-                    valid_yhat.append(Model(validx).reshape(validy.shape))
+                    valid_yhat.append(Model.predict(validx).reshape(validy.shape))
                     valid_y.append(validy)
                 valid_yhat = logsist(torch.cat(valid_yhat, dim=-1))
                 valid_y = torch.cat(valid_y, dim=-1)
@@ -72,9 +75,11 @@ if __name__ == '__main__':
         plt.title(model)
         plt.plot([i for i in range(len(ALLACC))], ALLACC)
         plt.plot([i for i in range(len(ALLLOSS))], ALLLOSS)
-        plt.legend(['train_acc', 'train_loss'])
+        plt.legend(['train_acc', 'train_loss(*0.1)'])
         plt.xlabel('epoch')
+        plt.savefig(model_result_dir + '/' + 'acc&loss.png')
         plt.show()
+        plt.clf()
         TP, FP, FN, TN = getMatrix(valid_yhat > 0.5, valid_y)
         C = [[TP, FN], [FP, TN]]
         sns.set()
@@ -83,32 +88,38 @@ if __name__ == '__main__':
         ax.set_title(model + 'Mixed Matrix')
         ax.set_xlabel('predict')
         ax.set_ylabel('true')
+        plt.savefig(model_result_dir + '/' + 'confuse_matrix.png')
         plt.show()
+        plt.clf()
         roc = np.array(ROC(valid_yhat, valid_y))
         plt.plot(roc[:, 0], roc[:, 1])
         plt.title(model + 'roc')
         plt.xlabel('FPR')
         plt.ylabel('TPR')
+        plt.savefig(model_result_dir + '/' + 'roc.png')
         plt.show()
+        plt.clf()
         auc = np.array(AUC(valid_yhat, valid_y))
         plt.plot(auc[:, 0], auc[:, 1])
         plt.title(model + 'AUC')
         plt.xlabel('FPR')
         plt.ylabel('TPR')
+        plt.savefig(model_result_dir + '/' + 'auc.png')
         plt.show()
         # 以下对真实测试集进行预测，可以提交到kaggle上
         Test = TestImageDataset(test_dir, test_image_dir)
         test_iter = Data.DataLoader(Test, batchsize, shuffle=False)
         test_img_names = []
         test_Y = []
-        for img_name, test_X in test_iter:
-            test_img_names.extend(img_name)
-            test_Y.append(Model(test_X).unsqueeze(-1))
-        test_Y = logsist(test_Y)
+        with torch.no_grad():
+            for img_name, test_X in test_iter:
+                test_img_names.extend(img_name)
+                test_Y.append((Model.predict(test_X.to(device)).unsqueeze(-1)))
+            test_Y = logsist(torch.cat(test_Y, dim=-1))
         test_label = []
         for i in test_Y:
             label = 1 if i > 0.5 else -1
             test_label.append(label)
         result = pd.DataFrame(columns=['image_id', 'is_male'], data = [[i, j] for i, j in zip(test_img_names, test_label)])
-        result.to_csv('./' + model +'output/sample_submission.csv')
+        result.to_csv(model_result_dir + '/sample_submission.csv')
 

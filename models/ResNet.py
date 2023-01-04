@@ -61,3 +61,5 @@ class ResNet(nn.Module):
                     nn.Flatten(), nn.Linear(512, 1))
     def forward(self, X):
         return self.net(X)
+    def predict(self, X):
+        return self.net(X)
