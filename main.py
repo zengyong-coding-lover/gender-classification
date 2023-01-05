@@ -16,8 +16,8 @@ import torch
 from torch import nn
 from matplotlib import pylab as plt
 import seaborn as sns
-models = [  "ResNet", "XNet"]
-num_epochs = 2
+models = [  "GoogleNet", "AlexNet", "ResNet", "XNet", "GoogleNet_Noise", "AlexNet_Noise", " ResNet_Noise", "XNet_Noise"]
+num_epochs = 50
 batchsize = 50
 device = 'cuda'
 lr = 0.1
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         with torch.no_grad():
             for img_name, test_X in test_iter:
                 test_img_names.extend(img_name)
-                test_Y.append((Model.predict(test_X.to(device)).unsqueeze(-1)))
+                test_Y.append((Model.predict(test_X.to(device)).reshape((len(img_name, )))))
             test_Y = logsist(torch.cat(test_Y, dim=-1))
         test_label = []
         for i in test_Y:
